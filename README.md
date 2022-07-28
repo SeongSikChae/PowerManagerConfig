@@ -2,6 +2,9 @@
 
 ## history
 
+### V2 v1.0.0 - 36d14843
+* --api_server_addr 실행 파라메터 제거
+
 ### v1.0.1
 
 * version parameter 요청 시 Revision 정보가 표시되게 기능을 추가하였습니다.
