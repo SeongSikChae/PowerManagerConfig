@@ -2,6 +2,9 @@
 
 ## history
 
+### V2 v1.0.0 - e5d5f965
+* 디바이스 추가 시 API 인증 키 정보 자동 추가 시 Exception 발생으로 자동 추가가 되지 않는 문제 fix
+
 ### V2 v1.0.0 - 36d14843
 * --api_server_addr 실행 파라메터 제거
 
