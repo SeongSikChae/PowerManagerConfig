@@ -2,6 +2,10 @@
 
 ## history
 
+### V2 v1.0.0 - dc635973
+* RECONFIG 모드 시 패스워드 변경 여부를 물어봐서 패스워드를 변경할 수 있도록 변경
+* V1 모드에서 MQTT 패스워드를 직접 지정 외 DAWONDNS 서버에서 패스워드를 받아와서 셋팅하는 방법 추가
+
 ### V2 v1.0.0 - 343f5a57
 * 실행 파라메터 제거 (clientCertificate, clientCertificatePassword)
 * 실행 파라메터 필수값 변경 (web_server_addr)
