@@ -2,6 +2,11 @@
 
 ## history
 
+## V2 v1.0.0 - 077c09da
+* 343f5a57의 clientCertificate 관련 Rollback
+* clientCertificate, clientCertificatePassword 를 옵션 파라메터로 처리하여 제공되지 않았을 경우 자동으로 실행되는 PC에 등록된 클라이언트 인증서를 선택 (1개만 있는 경우)
+* 동일한 CA 인증서로 여러 클라이언트 인증서가 있을 경우 clientCertificate, clientCertificatePassword 를 통해 직접 어떤 인증서로 인증할 것인지를 지정해야 함.
+
 ### V2 v1.0.0 - dc635973
 * RECONFIG 모드 시 패스워드 변경 여부를 물어봐서 패스워드를 변경할 수 있도록 변경
 * V1 모드에서 MQTT 패스워드를 직접 지정 외 DAWONDNS 서버에서 패스워드를 받아와서 셋팅하는 방법 추가
@@ -26,6 +31,8 @@
 * --host 접속 하고자 하는 기기 IP (기기 WIFI 접속 시 gateway)
 * --port 접속 하고자 하는 기기 PORT (현재 5000번 포트만 이용중인 것으로 파악)
 * --web_server_addr 사설 관리 웹서버 URL (ex) https://10.0.0.5/
+* --clientCertificate 클라이언트 인증서 (p12) 파일 경로
+* --clientCertificatePassword 클라이언트 인증서 패스워드
 
 ## MODE 설명
 
