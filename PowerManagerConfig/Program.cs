@@ -5,9 +5,9 @@ namespace PowerManagerConfig
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            Parser.Default.ParseArguments<Configuration>(args).WithParsed(config =>
+            ParserResult<Configuration> result = await Parser.Default.ParseArguments<Configuration>(args).WithParsedAsync<Configuration>(async config =>
             {
                 PrintRevision(Console.Out);
 
@@ -16,25 +16,29 @@ namespace PowerManagerConfig
                 if (string.IsNullOrWhiteSpace(mode))
                     mode = "V1";
 
-                IConfigrator configrator;
-                IRestService restService;
+                IConfigrator configrator = IConfigrator.Null;
+                IRestService restService = IRestService.Null;
+                IDeviceCommunicator deviceCommunicator = IDeviceCommunicator.Null;
                 switch (mode)
                 {
                     case "V1":
                         restService = new IRestService.RestService();
                         configrator = new IConfigrator.ConfigratorV1();
+                        deviceCommunicator = new IDeviceCommunicator.DeviceCommunicator();
                         break;
                     default:
                         throw new Exception($"unknown mode '{mode}'");
                 }
-                configrator.Initialize(config, restService, Console.In, Console.Out);
-                configrator.Configure();
+                await configrator.InitializeAsync(config, restService, deviceCommunicator, Console.In, Console.Out);
+                await configrator.ConfigureAsync();
                 configrator.Dispose();
-            })
-            .WithNotParsed(errors =>
+            });
+
+            await result.WithNotParsedAsync(async errors =>
             {
                 if (errors.IsVersion())
                     PrintRevision(errors.Output());
+                await Task.CompletedTask;
             });
         }
 

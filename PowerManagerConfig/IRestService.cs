@@ -65,7 +65,7 @@ namespace PowerManagerConfig
         public string Verify { get; set; } = string.Empty;
 
         [JsonPropertyName("mqtt_key")]
-        public string MqttKey { get; set; } = string.Empty;
+        public string? MqttKey { get; set; } = string.Empty;
     }
 
     public sealed class DeviceMqttKeyUpdateRequest
@@ -74,20 +74,40 @@ namespace PowerManagerConfig
         public string DeviceId { get; set; } = string.Empty;
 
         [JsonPropertyName("mqtt_key")]
-        public string MqttKey { get; set; } = string.Empty;
+        public string? MqttKey { get; set; } = string.Empty;
     }
 
     public interface IRestService
     {
-        Task<MqttAuth?> GetMqttAuth(Configuration config, MqttAuthRequest req);
+        Task<MqttAuth?> GetMqttAuthAsync(Configuration config, MqttAuthRequest req);
 
-        Task<string> MqttAuthAdd(Configuration config, string userId, string mac, string verify, string mqttKey);
+        Task<string> MqttAuthAddAsync(Configuration config, string userId, string mac, string verify, string? mqttKey);
 
-        Task<string> MqttKeyChange(Configuration config, string mac, string mqttKey, FileInfo? clientCertificateFile = null, string? clientCertificatePassword = null);
+        Task<string> MqttKeyChangeAsync(Configuration config, string mac, string? mqttKey, FileInfo? clientCertificateFile = null, string? clientCertificatePassword = null);
+
+        public static readonly IRestService Null = new NullRestService();
+
+        private sealed class NullRestService : IRestService
+        {
+            public async Task<MqttAuth?> GetMqttAuthAsync(Configuration config, MqttAuthRequest req)
+            {
+                return await Task.FromResult<MqttAuth?>(null);
+            }
+
+            public async Task<string> MqttAuthAddAsync(Configuration config, string userId, string mac, string verify, string? mqttKey)
+            {
+                return await Task.FromResult(string.Empty);
+            }
+
+            public async Task<string> MqttKeyChangeAsync(Configuration config, string mac, string? mqttKey, FileInfo? clientCertificateFile = null, string? clientCertificatePassword = null)
+            {
+                return await Task.FromResult(string.Empty);
+            }
+        }
 
         public sealed class RestService : IRestService
         {
-            public async Task<MqttAuth?> GetMqttAuth(Configuration config, MqttAuthRequest req)
+            public async Task<MqttAuth?> GetMqttAuthAsync(Configuration config, MqttAuthRequest req)
             {
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
                 using HttpClient client = new HttpClient();
@@ -101,7 +121,7 @@ namespace PowerManagerConfig
                 return JsonSerializer.Deserialize<MqttAuth>(contentString);
             }
 
-            public async Task<string> MqttAuthAdd(Configuration config, string userId, string mac, string verify, string mqttKey) 
+            public async Task<string> MqttAuthAddAsync(Configuration config, string userId, string mac, string verify, string? mqttKey) 
             {
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
                 using HttpClient client = new HttpClient();
@@ -123,7 +143,7 @@ namespace PowerManagerConfig
                 return contentString;
             }
 
-            public async Task<string> MqttKeyChange(Configuration config, string mac, string mqttKey, FileInfo? clientCertificateFile = null, string? clientCertificatePassword = null)
+            public async Task<string> MqttKeyChangeAsync(Configuration config, string mac, string? mqttKey, FileInfo? clientCertificateFile = null, string? clientCertificatePassword = null)
             {
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
 
