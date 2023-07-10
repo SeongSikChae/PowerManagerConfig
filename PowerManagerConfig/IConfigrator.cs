@@ -474,5 +474,70 @@ namespace PowerManagerConfig
                 await writer.WriteLineAsync(msg);
             }
         }
+
+        /// <summary>
+        /// 인증서 키 갱신을 위한 Configrator
+        /// </summary>
+        public sealed class ReConfigrator : AbstractConfigrator
+        {
+            public override async Task ConfigureAsync()
+            {
+                if (disposedValue)
+                    throw new ObjectDisposedException(nameof(deviceCommunicator));
+                if (config is null || restService is null)
+                    throw new NotInitialzedException();
+
+                await writer.WriteAsync("UserId: ");
+                string? user_id = await reader.ReadLineAsync();
+                if (string.IsNullOrWhiteSpace(user_id))
+                    throw new ArgumentNullException(nameof(user_id));
+
+                await writer.WriteAsync("Mac: ");
+                string? mac = await reader.ReadLineAsync();
+                if (string.IsNullOrWhiteSpace(mac))
+                    throw new ArgumentNullException(nameof(mac));
+
+                await writer.WriteAsync("Model: ");
+                string? model = await reader.ReadLineAsync();
+                if (string.IsNullOrWhiteSpace(model))
+                    throw new ArgumentNullException(nameof(model));
+
+                await writer.WriteAsync("Verify: (true | false)");
+                string? verify = await reader.ReadLineAsync();
+                if (string.IsNullOrWhiteSpace(verify))
+                    verify = "false";
+
+                MqttAuth? mqttAuth = await restService.GetMqttAuthAsync(config, new MqttAuthRequest
+                {
+                    AccountInfo = new MqttAuthRequest.Account
+                    {
+                        UserId = user_id
+                    },
+                    DeviceInfo = new MqttAuthRequest.Device
+                    {
+                        Mac = mac,
+                        ModelId = model,
+                        Company = "DAWONDNS",
+                        Latitude = "0",
+                        Longitude = "0",
+                        Verify = verify
+                    }
+                });
+                if (mqttAuth is null)
+                    throw new ArgumentNullException(nameof(MqttAuth));
+                await writer.WriteLineAsync($"verify: {mqttAuth.Verify} mqtt_key: {mqttAuth.MqttKey}");
+
+                string msg = await restService.MqttAuthAddAsync(config, user_id, mac, string.IsNullOrEmpty(mqttAuth.Verify) ? string.Empty : mqttAuth.Verify, mqttAuth.MqttKey);
+                await writer.WriteLineAsync(msg);
+
+                await writer.WriteAsync("Device Key Update: (true | false)");
+                string? keyUpdateStr = await reader.ReadLineAsync();
+                if (bool.TryParse(keyUpdateStr, out bool keyUpdate))
+                {
+                    msg = await restService.MqttKeyChangeAsync(config, mac, mqttAuth.MqttKey, config.ClientCertificate is null ? null : new FileInfo(config.ClientCertificate), config.ClientCertificatePassword);
+                    await writer.WriteLineAsync(msg);
+                }
+            }
+        }
     }
 }

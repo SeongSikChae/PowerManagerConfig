@@ -33,6 +33,10 @@ namespace PowerManagerConfig
                     case "V4":
                         configrator = new IConfigrator.ConfigratorV4();
                         break;
+                    case "RECONFIG":
+                        deviceCommunicator = IDeviceCommunicator.Null;
+                        configrator = new IConfigrator.ReConfigrator();
+                        break;
                     default:
                         throw new Exception($"unknown mode '{mode}'");
                 }

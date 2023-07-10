@@ -2,7 +2,7 @@
 {
     internal abstract class AbstractMockDeviceCommunicator : IDeviceCommunicator
     {
-        public async Task InitializeAsync(Configuration config, TextWriter writer)
+        public virtual async Task InitializeAsync(Configuration config, TextWriter writer)
         {
             this.writer = writer;
             await writer.WriteLineAsync($"{config.DeviceIP}:{config.DevicePort} Connected");
