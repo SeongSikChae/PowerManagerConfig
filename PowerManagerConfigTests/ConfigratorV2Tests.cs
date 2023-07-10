@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Diagnostics;
 
 namespace PowerManagerConfig.Tests
 {
@@ -47,9 +48,15 @@ namespace PowerManagerConfig.Tests
                 return await Task.FromResult("ReceiveMessage");
             }
 
-            public override async Task SendDelayMessageAsync(string delayMessage)
+            public override async Task SendDelayMessageAsync(DelayMessage delayMessage)
             {
+                Trace.WriteLine("SendDelayMessage");
                 await Task.CompletedTask;
+            }
+
+            public override Task SendConnactApRequestAsync(ConnactApRequest connactApRequestMessage)
+            {
+                throw new NotImplementedException();
             }
         }
     }

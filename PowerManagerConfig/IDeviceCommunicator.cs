@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace PowerManagerConfig
@@ -15,11 +16,13 @@ namespace PowerManagerConfig
 
         Task<string> ReceiveDeviceMacAsync();
 
-        Task<int> SendConfigrationAsync(string config);
+        Task<int> SendConfigrationAsync<T>(T config) where T : IMqttConfiguration;
 
         Task<string> ReceiveMessageAsync();
 
-        Task SendDelayMessageAsync(string delayMessage);
+        Task SendDelayMessageAsync(DelayMessage delayMessage);
+
+        Task SendConnactApRequestAsync(ConnactApRequest connactApRequestMessage);
 
         Task CloseAsync();
 
@@ -47,7 +50,7 @@ namespace PowerManagerConfig
                 return await Task.FromResult(string.Empty);
             }
 
-            public async Task<int> SendConfigrationAsync(string config)
+            public async Task<int> SendConfigrationAsync<T>(T config) where T : IMqttConfiguration
             {
                 return await Task.FromResult(0);
             }
@@ -57,7 +60,12 @@ namespace PowerManagerConfig
                 return await Task.FromResult(string.Empty);
             }
 
-            public async Task SendDelayMessageAsync(string delayMessage)
+            public async Task SendDelayMessageAsync(DelayMessage delayMessage)
+            {
+                await Task.CompletedTask;
+            }
+
+            public async Task SendConnactApRequestAsync(ConnactApRequest connactApRequestMessage)
             {
                 await Task.CompletedTask;
             }
@@ -97,11 +105,13 @@ namespace PowerManagerConfig
         {
             public async Task InitializeAsync(Configuration config, TextWriter writer)
             {
+                this.writer = writer;
                 await socket.ConnectAsync(IPAddress.Parse(config.DeviceIP), config.DevicePort);
                 await writer.WriteLineAsync($"{socket.RemoteEndPoint} Connected");
             }
 
             private readonly Socket socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            private TextWriter writer = TextWriter.Null;
 
             public async Task SendStartMessageAsync()
             {
@@ -127,9 +137,11 @@ namespace PowerManagerConfig
                 return string.Empty;
             }
 
-            public async Task<int> SendConfigrationAsync(string config)
+            public async Task<int> SendConfigrationAsync<T>(T config) where T : IMqttConfiguration
             {
-                return await socket.SendAsync(Encoding.ASCII.GetBytes(config + "\n"), SocketFlags.None);
+                string json = JsonSerializer.Serialize(config);
+                await writer.WriteLineAsync($"Push: {json}");
+                return await socket.SendAsync(Encoding.ASCII.GetBytes(json + "\n"), SocketFlags.None);
             }
 
             public async Task<string> ReceiveMessageAsync()
@@ -139,9 +151,17 @@ namespace PowerManagerConfig
                 return Encoding.ASCII.GetString(buf, 0, receiveBytes);
             }
 
-            public async Task SendDelayMessageAsync(string delayMessage)
+            public async Task SendDelayMessageAsync(DelayMessage delayMessage)
             {
-                byte[] buf = Encoding.ASCII.GetBytes(delayMessage + "\n");
+                string json = JsonSerializer.Serialize(delayMessage);
+                byte[] buf = Encoding.ASCII.GetBytes(json + "\n");
+                await socket.SendAsync(buf, SocketFlags.None);
+            }
+
+            public async Task SendConnactApRequestAsync(ConnactApRequest connactApRequestMessage)
+            {
+                string json = JsonSerializer.Serialize(connactApRequestMessage);
+                byte[] buf = Encoding.ASCII.GetBytes(json + "\n");
                 await socket.SendAsync(buf, SocketFlags.None);
             }
 

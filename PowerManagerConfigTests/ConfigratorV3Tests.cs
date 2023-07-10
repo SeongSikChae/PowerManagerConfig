@@ -1,23 +1,24 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Diagnostics;
 
 namespace PowerManagerConfig.Tests
 {
     [TestClass]
-    public class ConfigratorV1Tests
+    public class ConfigratorV3Tests
     {
         [TestMethod]
-        public async Task ConfigureTest()
+        public async Task ConfigureAsyncTest()
         {
             MockRestService restService = new MockRestService();
-            TestMockDeviceCommunicator deviceCommnicator = new TestMockDeviceCommunicator();
+            TestMockDeviceCommunicator deviceCommunicator = new TestMockDeviceCommunicator();
             TestMockReader reader = new TestMockReader();
             await reader.InitializeAsync();
-            IConfigrator.ConfigratorV1 configrator = new IConfigrator.ConfigratorV1();
+            IConfigrator.ConfigratorV3 configrator = new IConfigrator.ConfigratorV3();
             await configrator.InitializeAsync(new Configuration
             {
                 DeviceIP = "127.0.0.1",
                 DevicePort = 55000,
-            }, restService, deviceCommnicator, reader, new TraceWriter());
+            }, restService, deviceCommunicator, reader, new TraceWriter());
             await configrator.ConfigureAsync();
         }
 
@@ -26,13 +27,10 @@ namespace PowerManagerConfig.Tests
             public override async Task InitializeAsync()
             {
                 queue.Enqueue(string.Empty);
-                queue.Enqueue(string.Empty);
-                queue.Enqueue(string.Empty);
                 queue.Enqueue("test_wifi");
                 queue.Enqueue("1234");
                 queue.Enqueue("B540_W");
                 queue.Enqueue("test@outlook.com/kakao");
-                queue.Enqueue(string.Empty);
                 queue.Enqueue(string.Empty);
                 queue.Enqueue(string.Empty);
                 await Task.CompletedTask;
@@ -41,17 +39,18 @@ namespace PowerManagerConfig.Tests
 
         private sealed class TestMockDeviceCommunicator : AbstractMockDeviceCommunicator
         {
-            public override Task<string> ReceiveMessageAsync()
+            public override async Task<string> ReceiveMessageAsync()
             {
-                throw new NotImplementedException();
+                return await Task.FromResult("ReceiveMessage");
+            }
+
+            public override async Task SendConnactApRequestAsync(ConnactApRequest connactApRequestMessage)
+            {
+                Trace.WriteLine("SendConnactApRequest");
+                await Task.CompletedTask;
             }
 
             public override Task SendDelayMessageAsync(DelayMessage delayMessage)
-            {
-                throw new NotImplementedException();
-            }
-
-            public override Task SendConnactApRequestAsync(ConnactApRequest connactApRequestMessage)
             {
                 throw new NotImplementedException();
             }

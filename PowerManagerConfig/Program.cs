@@ -17,14 +17,18 @@ namespace PowerManagerConfig
                     mode = "V1";
 
                 IConfigrator configrator = IConfigrator.Null;
-                IRestService restService = IRestService.Null;
-                IDeviceCommunicator deviceCommunicator = IDeviceCommunicator.Null;
+                IRestService restService = new IRestService.RestService();
+                IDeviceCommunicator deviceCommunicator = new IDeviceCommunicator.DeviceCommunicator();
                 switch (mode)
                 {
                     case "V1":
-                        restService = new IRestService.RestService();
                         configrator = new IConfigrator.ConfigratorV1();
-                        deviceCommunicator = new IDeviceCommunicator.DeviceCommunicator();
+                        break;
+                    case "V2":
+                        configrator = new IConfigrator.ConfigratorV2();
+                        break;
+                    case "V3":
+                        configrator = new IConfigrator.ConfigratorV3();
                         break;
                     default:
                         throw new Exception($"unknown mode '{mode}'");

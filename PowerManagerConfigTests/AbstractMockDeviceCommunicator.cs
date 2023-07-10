@@ -4,9 +4,12 @@
     {
         public async Task InitializeAsync(Configuration config, TextWriter writer)
         {
+            this.writer = writer;
             await writer.WriteLineAsync($"{config.DeviceIP}:{config.DevicePort} Connected");
             await Task.CompletedTask;
         }
+
+        private TextWriter writer = TextWriter.Null;
 
         public async Task SendStartMessageAsync()
         {
@@ -23,14 +26,17 @@
             return await Task.FromResult("000000");
         }
 
-        public async Task<int> SendConfigrationAsync(string config)
+        public async Task<int> SendConfigrationAsync<T>(T config) where T : IMqttConfiguration
         {
+            await writer.WriteLineAsync("Push: ");
             return await Task.FromResult(0);
         }
 
         public abstract Task<string> ReceiveMessageAsync();
 
-        public abstract Task SendDelayMessageAsync(string delayMessage);
+        public abstract Task SendDelayMessageAsync(DelayMessage delayMessage);
+
+        public abstract Task SendConnactApRequestAsync(ConnactApRequest connactApRequestMessage);
 
         public async Task CloseAsync()
         {

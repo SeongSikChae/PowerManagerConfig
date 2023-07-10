@@ -153,10 +153,7 @@ namespace PowerManagerConfig
                 if (string.IsNullOrEmpty(mqttConfig.Topic))
                     mqttConfig.Topic = "dwd";
 
-                string json = JsonSerializer.Serialize(mqttConfig);
-                await writer.WriteLineAsync($"Push: {json}");
-
-                int sendBytes = await deviceCommunicator.SendConfigrationAsync(json);
+                int sendBytes = await deviceCommunicator.SendConfigrationAsync(mqttConfig);
                 await writer.WriteLineAsync($"Send: {sendBytes} Byte.");
 
                 await deviceCommunicator.CloseAsync();
@@ -241,17 +238,12 @@ namespace PowerManagerConfig
                 if (string.IsNullOrEmpty(mqttConfig.Topic))
                     mqttConfig.Topic = "dwd";
 
-                string json = JsonSerializer.Serialize(mqttConfig);
-                await writer.WriteLineAsync($"Push: {json}");
-
-                int sendBytes = await deviceCommunicator.SendConfigrationAsync(json);
+                int sendBytes = await deviceCommunicator.SendConfigrationAsync(mqttConfig);
                 await writer.WriteLineAsync($"Send: {sendBytes} Byte.");
 
                 string? msg = await deviceCommunicator.ReceiveMessageAsync();
                 await writer.WriteLineAsync(msg);
-
-                DelayMessage delayMessage = new DelayMessage();
-                await deviceCommunicator.SendDelayMessageAsync(JsonSerializer.Serialize(delayMessage));
+                await deviceCommunicator.SendDelayMessageAsync(new DelayMessage());
 
                 await deviceCommunicator.CloseAsync();
 
@@ -278,6 +270,104 @@ namespace PowerManagerConfig
                     throw new ArgumentNullException(nameof(MqttAuth));
                 await writer.WriteLineAsync($"mqtt_key: {mqttAuth.MqttKey}");
                 
+
+                msg = await restService.MqttAuthAddAsync(config, mqttConfig.UserId, mac, string.IsNullOrEmpty(mqttAuth.Verify) ? string.Empty : mqttAuth.Verify, mqttAuth.MqttKey);
+                await writer.WriteLineAsync(msg);
+
+                msg = await restService.MqttKeyChangeAsync(config, mac, mqttAuth.MqttKey, config.ClientCertificate is null ? null : new FileInfo(config.ClientCertificate), config.ClientCertificatePassword);
+                await writer.WriteLineAsync(msg);
+            }
+        }
+
+        /// <summary>
+        /// B540 (v1.0.30, v1.0.32) 을 위한 Configrator
+        /// </summary>
+        public sealed class ConfigratorV3 : AbstractConfigrator
+        {
+            public override async Task ConfigureAsync()
+            {
+                if (disposedValue)
+                    throw new ObjectDisposedException(nameof(deviceCommunicator));
+                if (config is null || restService is null || deviceCommunicator is null)
+                    throw new NotInitialzedException();
+
+                deviceCommunicator.SendStartMessageAsync().Wait();
+                deviceCommunicator.SendHelloMessageAsync().Wait();
+
+                MqttConfigurationV2 mqttConfig = new MqttConfigurationV2();
+
+
+                string mac = await deviceCommunicator.ReceiveDeviceMacAsync();
+
+                await writer.WriteAsync($"Device Mac: (default: {mac})");
+                mqttConfig.Mac = await reader.ReadLineAsync();
+                if (string.IsNullOrWhiteSpace(mqttConfig.Mac))
+                    mqttConfig.Mac = mac;
+
+                await writer.WriteAsync("SSID : ");
+                mqttConfig.Ssid = await reader.ReadLineAsync();
+                if (string.IsNullOrWhiteSpace(mqttConfig.Ssid))
+                    throw new ArgumentNullException(nameof(mqttConfig.Ssid));
+
+                await writer.WriteAsync("Wifi Password : ");
+                mqttConfig.Password = await reader.ReadLineAsync();
+                if (string.IsNullOrWhiteSpace(mqttConfig.Password))
+                    throw new ArgumentNullException(nameof(mqttConfig.Password));
+
+                await writer.WriteAsync("Model : ");
+                mqttConfig.Model = await reader.ReadLineAsync();
+                if (string.IsNullOrWhiteSpace(mqttConfig.Model))
+                    throw new ArgumentNullException(nameof(mqttConfig.Model));
+
+                await writer.WriteAsync("UserId : ");
+                mqttConfig.UserId = await reader.ReadLineAsync();
+                if (string.IsNullOrWhiteSpace(mqttConfig.UserId))
+                    throw new ArgumentNullException(nameof(mqttConfig.UserId));
+
+                await writer.WriteAsync("Mqtt Topic : (default: dwd)");
+                mqttConfig.Topic = await reader.ReadLineAsync();
+                if (string.IsNullOrEmpty(mqttConfig.Topic))
+                    mqttConfig.Topic = "dwd";
+
+                int sendBytes = await deviceCommunicator.SendConfigrationAsync(mqttConfig);
+                await writer.WriteLineAsync($"Send: {sendBytes} Byte.");
+
+                string? msg = await deviceCommunicator.ReceiveMessageAsync();
+                await writer.WriteLineAsync(msg);
+
+                await deviceCommunicator.SendConnactApRequestAsync(new ConnactApRequest
+                {
+                    Mac = mqttConfig.Mac
+                });
+
+                msg = await deviceCommunicator.ReceiveMessageAsync();
+                await writer.WriteLineAsync(msg);
+
+                await deviceCommunicator.CloseAsync();
+
+                await writer.WriteLineAsync("네트워크를 정상화 시킨 후 Enter를 입력하세요.");
+                await reader.ReadLineAsync();
+
+                MqttAuth? mqttAuth = await restService.GetMqttAuthAsync(config, new MqttAuthRequest
+                {
+                    AccountInfo = new MqttAuthRequest.Account
+                    {
+                        UserId = mqttConfig.UserId
+                    },
+                    DeviceInfo = new MqttAuthRequest.Device
+                    {
+                        Mac = mac,
+                        ModelId = mqttConfig.Model,
+                        Company = "DAWONDNS",
+                        Latitude = "0",
+                        Longitude = "0",
+                        Verify = "true"
+                    }
+                });
+                if (mqttAuth is null)
+                    throw new ArgumentNullException(nameof(MqttAuth));
+                await writer.WriteLineAsync($"mqtt_key: {mqttAuth.MqttKey}");
+
 
                 msg = await restService.MqttAuthAddAsync(config, mqttConfig.UserId, mac, string.IsNullOrEmpty(mqttAuth.Verify) ? string.Empty : mqttAuth.Verify, mqttAuth.MqttKey);
                 await writer.WriteLineAsync(msg);

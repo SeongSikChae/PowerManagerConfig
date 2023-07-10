@@ -2,7 +2,9 @@
 
 namespace PowerManagerConfig
 {
-    public sealed class MqttConfiguration
+    public interface IMqttConfiguration { }
+
+    public sealed class MqttConfiguration : IMqttConfiguration
     {
         [JsonPropertyName("server_addr")]
         public string? Server_Addr { get; set; } = "dwmqtt.dawonai.com";
@@ -32,7 +34,7 @@ namespace PowerManagerConfig
         public string? Topic { get; set; } = "dwd";
     }
 
-    public sealed class MqttConfigurationV2
+    public sealed class MqttConfigurationV2 : IMqttConfiguration
     {
         [JsonPropertyName("mac")]
         public string? Mac { get; set; }
@@ -81,5 +83,14 @@ namespace PowerManagerConfig
     {
         [JsonPropertyName("delay")]
         public string Delay { get; set; } = "0";
+    }
+
+    public sealed class ConnactApRequest
+    {
+        [JsonPropertyName("mac")]
+        public string Mac { get; set; } = string.Empty;
+
+        [JsonPropertyName("command")]
+        public string Command { get; set; } = "connectap";
     }
 }
