@@ -30,6 +30,9 @@ namespace PowerManagerConfig
                     case "V3":
                         configrator = new IConfigrator.ConfigratorV3();
                         break;
+                    case "V4":
+                        configrator = new IConfigrator.ConfigratorV4();
+                        break;
                     default:
                         throw new Exception($"unknown mode '{mode}'");
                 }
