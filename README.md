@@ -2,6 +2,9 @@
 
 ## history
 
+## V2 V1.0.0 - abf32ce6
+* 077c09da 기준으로 Open Source 화 및 테스트 가능한 형태로 Refactoring
+
 ## V2 v1.0.0 - 077c09da
 * 343f5a57의 clientCertificate 관련 Rollback
 * clientCertificate, clientCertificatePassword 를 옵션 파라메터로 처리하여 제공되지 않았을 경우 자동으로 실행되는 PC에 등록된 클라이언트 인증서를 선택 (1개만 있는 경우)
