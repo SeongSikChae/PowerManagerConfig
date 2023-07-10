@@ -3,7 +3,7 @@
 namespace PowerManagerConfig.Tests
 {
     [TestClass]
-    public class ConfigratorV1Tests
+    public class ConfigratorV2Tests
     {
         [TestMethod]
         public async Task ConfigureTest()
@@ -12,7 +12,7 @@ namespace PowerManagerConfig.Tests
             TestMockDeviceCommunicator deviceCommnicator = new TestMockDeviceCommunicator();
             TestMockReader reader = new TestMockReader();
             await reader.InitializeAsync();
-            IConfigrator.ConfigratorV1 configrator = new IConfigrator.ConfigratorV1();
+            IConfigrator.ConfigratorV2 configrator = new IConfigrator.ConfigratorV2();
             await configrator.InitializeAsync(new Configuration
             {
                 DeviceIP = "127.0.0.1",
@@ -28,11 +28,12 @@ namespace PowerManagerConfig.Tests
                 queue.Enqueue(string.Empty);
                 queue.Enqueue(string.Empty);
                 queue.Enqueue(string.Empty);
+                queue.Enqueue(string.Empty);
+                queue.Enqueue(string.Empty);
                 queue.Enqueue("test_wifi");
                 queue.Enqueue("1234");
                 queue.Enqueue("B540_W");
                 queue.Enqueue("test@outlook.com/kakao");
-                queue.Enqueue(string.Empty);
                 queue.Enqueue(string.Empty);
                 queue.Enqueue(string.Empty);
                 await Task.CompletedTask;
@@ -41,14 +42,14 @@ namespace PowerManagerConfig.Tests
 
         private sealed class TestMockDeviceCommunicator : AbstractMockDeviceCommunicator
         {
-            public override Task<string> ReceiveMessageAsync()
+            public override async Task<string> ReceiveMessageAsync()
             {
-                throw new NotImplementedException();
+                return await Task.FromResult("ReceiveMessage");
             }
 
-            public override Task SendDelayMessageAsync(string delayMessage)
+            public override async Task SendDelayMessageAsync(string delayMessage)
             {
-                throw new NotImplementedException();
+                await Task.CompletedTask;
             }
         }
     }
