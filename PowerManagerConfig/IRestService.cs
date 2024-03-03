@@ -1,9 +1,7 @@
 ﻿using System.Net;
-using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace PowerManagerConfig
@@ -111,22 +109,16 @@ namespace PowerManagerConfig
             {
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
                 using HttpClient client = new HttpClient();
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("applicaiton/json"));
 
                 Uri uri = new Uri("https://dwapi.dawonai.com:18443/api/v1/devices/register/create");
-                string jsonMessage = JsonSerializer.Serialize(req);
-                using HttpResponseMessage responseMessage = await client.PostAsync(uri, new StringContent(jsonMessage, Encoding.UTF8, "application/json"));
-                string contentString = await responseMessage.Content.ReadAsStringAsync();
-                return JsonSerializer.Deserialize<MqttAuth>(contentString);
+                using HttpResponseMessage responseMessage = await client.PostAsJsonAsync(uri, req);
+                return await responseMessage.Content.ReadFromJsonAsync<MqttAuth>();
             }
 
             public async Task<string> MqttAuthAddAsync(Configuration config, string userId, string mac, string verify, string? mqttKey) 
             {
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
                 using HttpClient client = new HttpClient();
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("applicaiton/json"));
 
                 AddAuthRequest req = new AddAuthRequest
                 {
@@ -137,10 +129,8 @@ namespace PowerManagerConfig
                 };
 
                 Uri uri = new Uri($"{config.WebServerAddr}/api/auth/add");
-                string jsonMessage = JsonSerializer.Serialize(req);
-                using HttpResponseMessage responseMessage = await client.PostAsync(uri, new StringContent(jsonMessage, Encoding.UTF8, "application/json"));
-                string contentString = await responseMessage.Content.ReadAsStringAsync();
-                return contentString;
+                using HttpResponseMessage responseMessage = await client.PostAsJsonAsync(uri, req);
+                return await responseMessage.Content.ReadAsStringAsync();
             }
 
             public async Task<string> MqttKeyChangeAsync(Configuration config, string mac, string? mqttKey, FileInfo? clientCertificateFile = null, string? clientCertificatePassword = null)
@@ -158,18 +148,14 @@ namespace PowerManagerConfig
                 httpClientHandler.SslProtocols = SslProtocols.Tls12;
 
                 using HttpClient client = new HttpClient(httpClientHandler);
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 DeviceMqttKeyUpdateRequest request = new DeviceMqttKeyUpdateRequest
                 {
                     DeviceId = mac,
                     MqttKey = mqttKey
                 };
                 Uri uri = new Uri($"{config.WebServerAddr}/rest/Auth/update_mqttKey");
-                string jsonMessage = JsonSerializer.Serialize(request);
-                using HttpResponseMessage responseMessage = await client.PostAsync(uri, new StringContent(jsonMessage, Encoding.UTF8, "application/json"));
-                string contentString = await responseMessage.Content.ReadAsStringAsync();
-                return contentString;
+                using HttpResponseMessage responseMessage = await client.PostAsJsonAsync(uri,request);
+                return await responseMessage.Content.ReadAsStringAsync();
             }
         }
     }
