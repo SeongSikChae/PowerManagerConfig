@@ -10,7 +10,7 @@ on:
     branches: [ "dev" ]
 
 jobs:
-  publish:
+  BuildAndTest:
 
     runs-on: ubuntu-latest
 
